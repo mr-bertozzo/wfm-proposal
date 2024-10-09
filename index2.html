@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Workforce Implementation Proposal</title>
+    <title>Full-Screen Embedded Content</title>
     <!-- Add some basic styling -->
     <style>
         body {
@@ -16,8 +16,6 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
         }
         header {
             background-color: #03072df6;
@@ -25,11 +23,10 @@
             text-align: center;
             padding: 1rem;
             flex-shrink: 0;
-            width: 100%;
         }
         main {
             flex-grow: 1;
-            display: none; /* Hide main content initially */
+            display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -42,58 +39,18 @@
             border: none;
             margin-bottom: 20px; /* Add margin to separate iframes */
         }
+
         .spacer {
             height: 20px; /* Adjust the height of the space */
         }
-        .login-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        input[type="text"], input[type="password"] {
-            margin: 10px 0;
-            padding: 10px;
-            width: 200px;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
     </style>
-    <script>
-        function login() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-
-            if (username === 'marcos' && password === '5239') {
-                document.getElementById('login-container').style.display = 'none';
-                document.getElementById('main-content').style.display = 'flex';
-            } else {
-                alert('Incorrect username or password!');
-            }
-        }
-    </script>
 </head>
 <body>
     <header>
-        <h1>Workforce Implementation Proposal</h1>
+        <h1>Presentation and Report</h1>
     </header>
 
-    <div id="login-container" class="login-container">
-        <h2>Login</h2>
-        <input type="text" id="username" placeholder="Username" required>
-        <input type="password" id="password" placeholder="Password" required>
-        <button onclick="login()">Login</button>
-    </div>
-
-    <main id="main-content">
+    <main>
         <!-- Google Presentation -->
         <iframe 
             src="https://docs.google.com/presentation/d/e/2PACX-1vSNY_cNUz1fkqfU53ZVJcPOL3MD3m9Jnp1ZKCOLcVznNlnMdECpITfWqDCoGyNSNg/embed?start=false&loop=false&delayms=3000" 

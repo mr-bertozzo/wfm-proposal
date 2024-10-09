@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Workforce Implementation Proposal</title>
+    <!-- Add some basic styling -->
+    <style>
+        body {
+            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans';
+            margin: 0;
+            padding: 0;
+            background-color: #000000f6;
+            color: #333;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        header {
+            background-color: #03072df6;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            flex-shrink: 0;
+            width: 100%;
+        }
+        main {
+            flex-grow: 1;
+            display: none; /* Hide main content initially */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+        }
+        iframe {
+            width: 1200px;
+            height: 900px;
+            border: none;
+            margin-bottom: 20px; /* Add margin to separate iframes */
+        }
+        .spacer {
+            height: 20px; /* Adjust the height of the space */
+        }
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        input[type="text"], input[type="password"] {
+            margin: 10px 0;
+            padding: 10px;
+            width: 200px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+    <script>
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (username === 'marcos' && password === '5239') {
+                document.getElementById('login-container').style.display = 'none';
+                document.getElementById('main-content').style.display = 'flex';
+            } else {
+                alert('Incorrect username or password!');
+            }
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <h1>Workforce Implementation Proposal</h1>
+    </header>
+
+    <div id="login-container" class="login-container">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button onclick="login()">Login</button>
+    </div>
+
+    <main id="main-content">
+        <!-- Google Presentation -->
+        <iframe 
+            src="https://docs.google.com/presentation/d/e/2PACX-1vSNY_cNUz1fkqfU53ZVJcPOL3MD3m9Jnp1ZKCOLcVznNlnMdECpITfWqDCoGyNSNg/embed?start=false&loop=false&delayms=3000" 
+            allowfullscreen="true">
+        </iframe>
+
+        <!-- Spacer between iframes -->
+        <div class="spacer"></div>
+        
+        <!-- Google Data Studio Report -->
+        <iframe 
+            src="https://lookerstudio.google.com/embed/reporting/5ef6a05c-a371-43f7-beb2-27b5b53989e1/page/utkEE" 
+            allowfullscreen>
+        </iframe>
+    </main>
+</body>
+</html>

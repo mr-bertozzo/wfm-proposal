@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV File Summary (Total Hours per Agent)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #bbb8b8;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        h1 {
+            color: #e5eaef;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            background-color: #272472;
+        }
+
+        label {
+            color: #6a7888;
+            display: block;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        input[type="file"], select {
+            margin: 20px auto;
+            padding: 12px 15px;
+            font-size: 16px;
+            border: 2px solid #a0a5aa;
+            border-radius: 5px;
+            width: 200px;
+            display: block; 
+            transition: border-color 0.3s;
+            background-color: #afb5bb;
+        }
+
+        input[type="file"]:hover, select:hover {
+            border-color: #0056b3; /* Darker blue on hover */
+        }
+
+        table {
+            width: 45%;
+            margin: 20px;
+            border-collapse: collapse;
+            color: #e5eaef
+            background-color: #6a7888;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            float: left; 
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #7f8b98;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        #chartContainer {
+            width: 50%;
+            height: 500px; 
+            float: right; 
+            margin: 20px 0; /* Add vertical margin */
+        }
+
+        canvas {
+            height: 75% !important; 
+            width: 100% !important; 
+            background-color: #b9b1b1; 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); 
+            border-radius: 5px; /* Rounded corners for the chart */
+        }
+
+        @media screen and (max-width: 768px) {
+            table, #chartContainer {
+                width: 100%; 
+                float: none; 
+                margin: 0; 
+            }
+            h1 {
+                font-size: 2rem; /* Adjust heading size for smaller screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>CSV File Summary (Total Hours per Agent)</h1>
+    
+    <input type="file" id="fileInput" accept=".csv" />
+    
+    <label for="weekSelector">Select Week: </label>
+    <select id="weekSelector" onchange="updateSummaryAndChart()">
+        <option value="">All Weeks</option>
+    </select>
+    
+    <table id="summaryTable" border="1">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Total Hours</th>
+            </tr>
+        </thead>
+        <tbody id="summaryBody"></tbody>
+    </table>
+
+    <div id="chartContainer">
+        <canvas id="hoursChart"></canvas>
+    </div>
+
+    <script>
+        let totalHoursPerName = {};
+        let allData = []; // Store all data for filtering
+        let selectedWeek = '';
+
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const csv = e.target.result;
+                    processCSV(csv);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function processCSV(csv) {
+            const lines = csv.trim().split('\n').map(line => line.split(','));
+
+            const header = lines[0].map(h => h.trim().toLowerCase());
+            allData = lines.slice(1); // Store all data for filtering later
+
+            const nameIndex = header.indexOf('name');
+            const weekIndex = header.indexOf('week');
+            const inIndex = header.indexOf('in');
+            const outIndex = header.indexOf('out');
+
+            // Check if the required columns exist
+            if (nameIndex === -1 || weekIndex === -1 || inIndex === -1 || outIndex === -1) {
+                console.error("Missing required columns (name, week, in, out) in CSV file.");
+                return;
+            }
+
+            // Populate the week selector
+            populateWeekSelector(allData, weekIndex);
+
+            // Calculate total hours
+            calculateTotalHours(allData, nameIndex, weekIndex, inIndex, outIndex);
+        }
+
+        function populateWeekSelector(data, weekIndex) {
+            const weekSelector = document.getElementById('weekSelector');
+            const weeks = new Set();
+
+            data.forEach(row => {
+                weeks.add(row[weekIndex].trim());
+            });
+
+            weeks.forEach(week => {
+                const option = document.createElement('option');
+                option.value = week;
+                option.textContent = week;
+                weekSelector.appendChild(option);
+            });
+        }
+
+        function calculateTotalHours(data, nameIndex, weekIndex, inIndex, outIndex) {
+            totalHoursPerName = {}; // Reset totals
+
+            data.forEach(row => {
+                const name = row[nameIndex].trim();
+                const week = row[weekIndex].trim();
+                const inTime = row[inIndex].trim();
+                const outTime = row[outIndex].trim();
+
+                if (!inTime || !outTime) {
+                    return; // Skip if time values are invalid
+                }
+
+                const inDate = convertTo24HourFormat(inTime);
+                const outDate = convertTo24HourFormat(outTime);
+
+                if (!inDate || !outDate) {
+                    return; // Skip invalid time formats
+                }
+
+                let hoursWorked = (outDate - inDate) / (1000 * 60 * 60); // Calculate time difference in hours
+
+                if (hoursWorked < 0) {
+                    hoursWorked += 24; // Adjust for crossing midnight
+                }
+
+                if (!totalHoursPerName[name]) {
+                    totalHoursPerName[name] = {};
+                }
+
+                if (!totalHoursPerName[name][week]) {
+                    totalHoursPerName[name][week] = 0;
+                }
+
+                totalHoursPerName[name][week] += hoursWorked;
+            });
+
+            displaySummary(totalHoursPerName, selectedWeek);
+            renderChart(totalHoursPerName, selectedWeek); // Render the chart with totals
+        }
+
+        function convertTo24HourFormat(timeStr) {
+            const [time, modifier] = timeStr.split(' ');
+            let [hours, minutes] = time.split(':').map(Number);
+
+            if (modifier === 'PM' && hours !== 12) {
+                hours += 12;
+            }
+            if (modifier === 'AM' && hours === 12) {
+                hours = 0;
+            }
+
+            const now = new Date();
+            now.setHours(hours, minutes, 0, 0);
+
+            return now;
+        }
+
+        function displaySummary(data, week) {
+            const summaryBody = document.getElementById('summaryBody');
+            summaryBody.innerHTML = ''; // Clear previous content
+
+            const summaryArray = Object.entries(data).map(([name, weeksData]) => {
+                const totalHours = week ? weeksData[week] || 0 : Object.values(weeksData).reduce((a, b) => a + b, 0);
+                return [name, totalHours];
+            });
+
+            summaryArray.sort((a, b) => b[1] - a[1]); // Sort by total hours in descending order
+
+            summaryArray.forEach(([name, totalHours]) => {
+                const row = document.createElement('tr');
+                
+                const nameCell = document.createElement('td');
+                nameCell.textContent = name;
+
+                const totalHoursCell = document.createElement('td');
+                totalHoursCell.textContent = totalHours.toFixed(2); // Display hours rounded to 2 decimal places
+
+                row.appendChild(nameCell);
+                row.appendChild(totalHoursCell);
+                
+                summaryBody.appendChild(row);
+            });
+        }
+
+        function updateSummaryAndChart() {
+            selectedWeek = document.getElementById('weekSelector').value;
+            displaySummary(totalHoursPerName, selectedWeek);
+            renderChart(totalHoursPerName, selectedWeek);
+        }
+
+        // Function to render the bar chart
+        function renderChart(data, week) {
+    const ctx = document.getElementById('hoursChart').getContext('2d');
+
+    const summaryArray = Object.entries(data).map(([name, weeksData]) => {
+        const totalHours = week ? weeksData[week] || 0 : Object.values(weeksData).reduce((a, b) => a + b, 0);
+        return { name, totalHours };
+    });
+
+    summaryArray.sort((a, b) => b.totalHours - a.totalHours); // Sort by total hours in descending order
+
+    // Check if the chart already exists and destroy it if it does
+    if (window.hoursChart instanceof Chart) {
+        window.hoursChart.destroy(); // Destroy existing chart
+    }
+
+    // Initialize the new chart
+    window.hoursChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: summaryArray.map(item => item.name),
+            datasets: [{
+                label: 'Total Hours',
+                data: summaryArray.map(item => item.totalHours),
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Total Hours'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Names'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(tooltipItem) {
+                            return tooltipItem.dataset.label + ': ' + tooltipItem.raw.toFixed(2);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+    </script>
+</body>
+
+<div class="link">
+    <a href="file:///C:/Users/mbertozzo/Desktop/auto_test/index2.html" style="color: #fff; text-align: left;display: block;">Open Main Sample</a>
+</html>
